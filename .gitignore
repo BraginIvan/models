@@ -99,3 +99,11 @@ tutorials/embedding/text8
 tutorials/embedding/questions-words.txt
 
 samples/outreach/blogs/segmentation_blogpost/carvana-image-masking-challenge/
+
+research/pycocotools
+research/object_detection/datasets/
+research/object_detection/protos/
+research/object_detection/pretrained
+research/object_detection/experement/
+research/object_detection/experiment_efficientnet/
+research/object_detection/ckpts/

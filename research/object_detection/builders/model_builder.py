@@ -53,6 +53,8 @@ from object_detection.models.ssd_mobilenet_v2_fpn_feature_extractor import SSDMo
 from object_detection.models.ssd_mobilenet_v2_fpn_keras_feature_extractor import SSDMobileNetV2FpnKerasFeatureExtractor
 from object_detection.models.ssd_mobilenet_v2_keras_feature_extractor import SSDMobileNetV2KerasFeatureExtractor
 from object_detection.models.ssd_pnasnet_feature_extractor import SSDPNASNetFeatureExtractor
+from object_detection.models.ssd_efficient_net_feature_extractor import SSDEfficientNetFeatureExtractor
+
 from object_detection.predictors import rfcn_box_predictor
 from object_detection.predictors import rfcn_keras_box_predictor
 from object_detection.predictors.heads import mask_head
@@ -61,6 +63,7 @@ from object_detection.utils import ops
 
 # A map of names to SSD feature extractors.
 SSD_FEATURE_EXTRACTOR_CLASS_MAP = {
+    'efficientnet': SSDEfficientNetFeatureExtractor,
     'ssd_inception_v2': SSDInceptionV2FeatureExtractor,
     'ssd_inception_v3': SSDInceptionV3FeatureExtractor,
     'ssd_mobilenet_v1': SSDMobileNetV1FeatureExtractor,

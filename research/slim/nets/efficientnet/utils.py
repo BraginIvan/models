@@ -1,6 +1,9 @@
 import tensorflow as tf
 from nets.efficientnet import efficientnet_model
 import re
+import numpy as np
+
+from tensorflow.contrib.framework import add_arg_scope
 
 
 class BlockDecoder(object):
@@ -78,24 +81,86 @@ class BlockDecoder(object):
 
 
 class DepthwiseConv2D(tf.keras.layers.DepthwiseConv2D, tf.layers.Layer):
-  """Wrap keras DepthwiseConv2D to tf.layers."""
+    """Wrap keras DepthwiseConv2D to tf.layers."""
 
-  pass
+    pass
 
 
-def drop_connect(inputs, is_training, drop_connect_rate):
-  """Apply drop connect."""
-  if not is_training:
-    return inputs
+@add_arg_scope
+def drop_connect(inputs, drop_connect_rate, is_training=False):
+    """Apply drop connect."""
+    print('drop_connect is_training: '  + str(is_training))
 
-  # Compute keep_prob
-  # TODO(tanmingxing): add support for training progress.
-  keep_prob = 1.0 - drop_connect_rate
+    if not is_training:
+        return inputs
 
-  # Compute drop_connect tensor
-  batch_size = tf.shape(inputs)[0]
-  random_tensor = keep_prob
-  random_tensor += tf.random_uniform([batch_size, 1, 1, 1], dtype=inputs.dtype)
-  binary_tensor = tf.floor(random_tensor)
-  output = tf.div(inputs, keep_prob) * binary_tensor
-  return output
+    # Compute keep_prob
+    # TODO(tanmingxing): add support for training progress.
+    keep_prob = 1.0 - drop_connect_rate
+
+    # Compute drop_connect tensor
+    batch_size = tf.shape(inputs)[0]
+    random_tensor = keep_prob
+    random_tensor += tf.random_uniform([batch_size, 1, 1, 1], dtype=inputs.dtype)
+    # random_tensor = tf.add(random_tensor, tf.random_uniform([batch_size, 1, 1, 1], dtype=inputs.dtype), name="drop_connect_rate_add")
+    binary_tensor = tf.floor(random_tensor)
+    output = tf.div(inputs, keep_prob) * binary_tensor
+    return output
+
+
+def conv_kernel_initializer(shape, dtype=None, partition_info=None):
+    """Initialization for convolutional kernels.
+
+    The main difference with tf.variance_scaling_initializer is that
+    tf.variance_scaling_initializer uses a truncated normal with an uncorrected
+    standard deviation, whereas here we use a normal distribution. Similarly,
+    tf.contrib.layers.variance_scaling_initializer uses a truncated normal with
+    a corrected standard deviation.
+
+    Args:
+      shape: shape of variable
+      dtype: dtype of variable
+      partition_info: unused
+
+    Returns:
+      an initialization for the variable
+    """
+    del partition_info
+    kernel_height, kernel_width, _, out_filters = shape
+    fan_out = int(kernel_height * kernel_width * out_filters)
+    return tf.random_normal(
+        shape, mean=0.0, stddev=np.sqrt(2.0 / fan_out), dtype=dtype)
+
+
+def dense_kernel_initializer(shape, dtype=None, partition_info=None):
+    """Initialization for dense kernels.
+
+    This initialization is equal to
+      tf.variance_scaling_initializer(scale=1.0/3.0, mode='fan_out',
+                                      distribution='uniform').
+    It is written out explicitly here for clarity.
+
+    Args:
+      shape: shape of variable
+      dtype: dtype of variable
+      partition_info: unused
+
+    Returns:
+      an initialization for the variable
+    """
+    del partition_info
+    init_range = 1.0 / np.sqrt(shape[1])
+    return tf.random_uniform(shape, -init_range, init_range, dtype=dtype)
+
+
+@add_arg_scope
+def get_batch_norm(is_training=None):
+    print('get_batch_norm is_training: '  + str(is_training))
+    class BatchNormalization(tf.layers.BatchNormalization):
+
+        def __init__(self, **kwargs):
+            super(BatchNormalization, self).__init__(**kwargs)
+
+        def call(self, inputs, training=is_training):
+            return super(BatchNormalization, self).call(inputs, training=training)
+    return BatchNormalization

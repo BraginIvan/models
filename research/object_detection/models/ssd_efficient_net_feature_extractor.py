@@ -75,6 +75,8 @@ class SSDEfficientNetFeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
             override_base_feature_extractor_hyperparams=
             override_base_feature_extractor_hyperparams)
 
+        self.is_training = is_training
+
     def preprocess(self, resized_inputs):
         """SSD preprocessing.
 
@@ -114,14 +116,14 @@ class SSDEfficientNetFeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
 
         with tf.variable_scope('EfficientNet',
                                reuse=self._reuse_weights) as scope:
-            with slim.arg_scope(efficientnet.efficient_net_arg_scope(is_training=None)):
+            with slim.arg_scope(efficientnet.efficient_net_arg_scope(is_training=self.is_training)):
                 with (slim.arg_scope(self._conv_hyperparams_fn())
                 if self._override_base_feature_extractor_hyperparams
                 else context_manager.IdentityContextManager()):
                     _, image_features = efficientnet.efficient_net_base(
                         ops.pad_to_multiple(preprocessed_inputs, self._pad_to_multiple),
                         model_name='efficientnet-edgetpu-S',
-                        training=True, # need to use efficient_net_arg_scope and batch norm scope
+                        # training=True, # need to use efficient_net_arg_scope and batch norm scope
                         scope=scope
                     )
             with slim.arg_scope(self._conv_hyperparams_fn()):

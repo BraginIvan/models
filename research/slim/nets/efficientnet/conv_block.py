@@ -122,14 +122,16 @@ class MBConvBlock(tf.keras.layers.Layer):
 
         self.endpoints = {'expansion_output': x}
 
-        x = self._bn2(self._project_conv(x))
+        x = self._relu_fn(self._bn2(self._project_conv(x)))
+        # x = self._bn2(self._project_conv(x))
+        # y = self._relu_fn(x)
         if self._block_args.id_skip:
             if all(
                     s == 1 for s in self._block_args.strides
             ) and self._block_args.input_filters == self._block_args.output_filters:
                 # only apply drop_connect if skip presents.
-                if drop_connect_rate:
-                    x = utils.drop_connect(x, drop_connect_rate=drop_connect_rate)
+                # if drop_connect_rate:
+                #     x = utils.drop_connect(x, drop_connect_rate=drop_connect_rate)
                 x = tf.add(x, inputs)
         tf.logging.info('Project: %s shape: %s' % (x.name, x.shape))
         return x
@@ -191,16 +193,16 @@ class MBConvBlockWithoutDepthwise(MBConvBlock):
 
         self.endpoints = {'expansion_output': x}
 
-        x = self._bn1(self._project_conv(x))
+        x = self._relu_fn((self._bn1(self._project_conv(x))))
+        # x = (self._bn1(self._project_conv(x)))
+        # y = self._relu_fn(x)
         if self._block_args.id_skip:
             if all(
                     s == 1 for s in self._block_args.strides
             ) and self._block_args.input_filters == self._block_args.output_filters:
                 # only apply drop_connect if skip presents.
-                if drop_connect_rate:
-                    x_drop = utils.drop_connect(x, drop_connect_rate=drop_connect_rate)
-                    x = tf.add(x_drop, inputs)
-                else:
-                    x = tf.add(x, inputs)
+                # if drop_connect_rate:
+                #     x = utils.drop_connect(x, drop_connect_rate=drop_connect_rate)
+                x = tf.add(x, inputs)
         tf.logging.info('Project: %s shape: %s' % (x.name, x.shape))
         return x

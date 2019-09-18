@@ -114,7 +114,7 @@ class SSDEfficientNetFeatureExtractor(ssd_meta_arch.SSDFeatureExtractor):
             'use_depthwise': self._use_depthwise,
         }
 
-        with tf.variable_scope('EfficientNet',
+        with tf.variable_scope('efficientnet-edgetpu-S',
                                reuse=self._reuse_weights) as scope:
             with slim.arg_scope(efficientnet.efficient_net_arg_scope(is_training=self.is_training)):
                 with (slim.arg_scope(self._conv_hyperparams_fn())

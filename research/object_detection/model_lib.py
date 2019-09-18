@@ -412,6 +412,26 @@ def create_model_fn(detection_model_fn, configs, hparams, use_tpu=False,
           summaries=summaries,
           name='')  # Preventing scope prefix on all variables.
 
+      from tensorflow.contrib.framework.python.framework import checkpoint_utils
+
+      # var_list = checkpoint_utils.list_variables("ckpts/efficientnet-edgetpu-S/model.ckpt-106000")
+      #
+      # variables2 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+      # variables = [v for v in variables2 if  'act_quant' not in v.name and 'weights_quant' not in v.name and 'quant/m' not in v.name and 'fake_quantization' not in v.name]
+      # sess = tf.Session()
+      # sess.run(tf.global_variables_initializer())
+      # tf.train.Saver(var_list=variables).restore(sess, "experiment_eff3/model/model.ckpt-1060634")
+      # tf.train.Saver().save(sess, "experiment_eff3/model/model.ckpt-1060635" )
+      # print()
+
+      # variables2 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+      # variables = [v for v in variables2 if  'act_quant' not in v.name and 'weights_quant' not in v.name and 'quant/m' not in v.name and 'fake_quantization' not in v.name]
+      # sess = tf.Session()
+      # sess.run(tf.global_variables_initializer())
+      # tf.train.Saver(var_list=variables).restore(sess, "experiment_eff3/model/model.ckpt-2980")
+      # tf.train.Saver().save(sess, "experiment_eff3/model/model.ckpt-2981" )
+      # print()
+
     if mode == tf.estimator.ModeKeys.PREDICT:
       exported_output = exporter_lib.add_output_tensor_nodes(detections)
       export_outputs = {

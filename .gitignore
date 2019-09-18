@@ -107,3 +107,8 @@ research/object_detection/pretrained
 research/object_detection/experement/
 research/object_detection/experiment_efficientnet/
 research/object_detection/ckpts/
+research/object_detection/experiment_efficientnet2/
+research/object_detection/experiment_efficientnet2_q/
+research/object_detection/experiment_eff3/
+research/object_detection/inceptionv2/
+research/object_detection/mobilenetv*

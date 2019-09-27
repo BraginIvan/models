@@ -59,7 +59,19 @@ FLAGS = flags.FLAGS
 def main(unused_argv):
   flags.mark_flag_as_required('model_dir')
   flags.mark_flag_as_required('pipeline_config_path')
-  config = tf.estimator.RunConfig(model_dir=FLAGS.model_dir, save_checkpoints_secs=1800)
+  # strategy = tf.contrib.distribute.MirroredStrategy(devices=["/device:GPU:0", "/device:GPU:1"])
+  # config = tf.estimator.RunConfig(model_dir=FLAGS.model_dir, save_checkpoints_secs=1800, train_distribute=strategy)
+
+  # gpu_devices = ["/device:GPU:{}".format(x) for x in range(len(FLAGS.gpus.split(",")))]
+  # strategy = tf.distribute.MirroredStrategy(devices=gpu_devices,
+  #                                           cross_device_ops=tf.distribute.HierarchicalCopyAllReduce(num_packs=1))
+  # config = tf.estimator.RunConfig(model_dir=FLAGS.model_dir,
+  #                                 train_distribute=strategy,
+  #                                 save_checkpoints_steps=1500)
+  config = tf.estimator.RunConfig(model_dir=FLAGS.model_dir, save_checkpoints_secs=3600)
+
+  # or optionally
+  # strategy = tf.contrib.distribute.MirroredStrategy(num_gpus=2)
 
   train_and_eval_dict = model_lib.create_estimator_and_inputs(
       run_config=config,

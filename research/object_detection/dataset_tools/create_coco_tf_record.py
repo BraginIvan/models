@@ -192,6 +192,64 @@ def create_tf_example(image,
 
 
 def _create_tf_record_from_coco_annotations(
+        annotations_file, image_dir, output_path, include_masks, num_shards):
+
+    val_id_list = np.loadtxt("object_detection/data/mscoco_minival_ids.txt", 'int32')
+    subset_count = 0
+    with contextlib2.ExitStack() as tf_record_close_stack, \
+            tf.gfile.GFile(annotations_file, 'r') as fid:
+        output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
+            tf_record_close_stack, output_path, num_shards)
+        groundtruth_data = json.load(fid)
+        images = groundtruth_data['images']
+        category_index = label_map_util.create_category_index(
+            groundtruth_data['categories'])
+
+        annotations_index = {}
+        if 'annotations' in groundtruth_data:
+            tf.logging.info(
+                'Found groundtruth annotations. Building annotations index.')
+            for annotation in groundtruth_data['annotations']:
+                if annotation['category_id'] not in [1,2,3,4,6,8]:
+                    continue
+                image_id = annotation['image_id']
+                if image_id not in annotations_index:
+                    annotations_index[image_id] = []
+                annotations_index[image_id].append(annotation)
+        missing_annotation_count = 0
+
+        good_images = []
+        for image in images:
+            image_id = image['id']
+            if image_id not in annotations_index:
+                missing_annotation_count += 1
+                # annotations_index[image_id] = []
+            else:
+                good_images.append(image)
+        images=good_images
+        tf.logging.info('%d images are missing annotations.',
+                        missing_annotation_count)
+
+        total_num_annotations_skipped = 0
+        for idx, image in enumerate(images):
+            if idx % 100 == 0:
+                tf.logging.info('On image %d of %d', idx, len(images))
+
+            if (image['id'] not in val_id_list):
+                print(subset_count, idx, image['id'])
+                subset_count = subset_count + 1
+            else:
+                continue
+            annotations_list = annotations_index[image['id']]
+            _, tf_example, num_annotations_skipped = create_tf_example(
+                image, annotations_list, image_dir, category_index, include_masks)
+            total_num_annotations_skipped += num_annotations_skipped
+            shard_idx = idx % num_shards
+            output_tfrecords[shard_idx].write(tf_example.SerializeToString())
+        tf.logging.info('Finished writing, skipped %d annotations.',
+                        total_num_annotations_skipped)
+
+def _create_tf_record_from_coco_annotations2(
     annotations_file, image_dir, output_path, include_masks, num_shards):
   """Loads COCO annotation json files and converts to tf.Record format.
 
@@ -247,35 +305,35 @@ def _create_tf_record_from_coco_annotations(
 def main(_):
   assert FLAGS.train_image_dir, '`train_image_dir` missing.'
   assert FLAGS.val_image_dir, '`val_image_dir` missing.'
-  assert FLAGS.test_image_dir, '`test_image_dir` missing.'
+  # assert FLAGS.test_image_dir, '`test_image_dir` missing.'
   assert FLAGS.train_annotations_file, '`train_annotations_file` missing.'
   assert FLAGS.val_annotations_file, '`val_annotations_file` missing.'
-  assert FLAGS.testdev_annotations_file, '`testdev_annotations_file` missing.'
+  # assert FLAGS.testdev_annotations_file, '`testdev_annotations_file` missing.'
 
   if not tf.gfile.IsDirectory(FLAGS.output_dir):
     tf.gfile.MakeDirs(FLAGS.output_dir)
   train_output_path = os.path.join(FLAGS.output_dir, 'coco_train.record')
   val_output_path = os.path.join(FLAGS.output_dir, 'coco_val.record')
-  testdev_output_path = os.path.join(FLAGS.output_dir, 'coco_testdev.record')
+  # testdev_output_path = os.path.join(FLAGS.output_dir, 'coco_testdev.record')
 
-  _create_tf_record_from_coco_annotations(
-      FLAGS.train_annotations_file,
-      FLAGS.train_image_dir,
-      train_output_path,
-      FLAGS.include_masks,
-      num_shards=100)
+  # _create_tf_record_from_coco_annotations(
+  #     FLAGS.train_annotations_file,
+  #     FLAGS.train_image_dir,
+  #     train_output_path,
+  #     FLAGS.include_masks,
+  #     num_shards=100)
   _create_tf_record_from_coco_annotations(
       FLAGS.val_annotations_file,
       FLAGS.val_image_dir,
-      val_output_path,
+      train_output_path,
       FLAGS.include_masks,
-      num_shards=10)
-  _create_tf_record_from_coco_annotations(
-      FLAGS.testdev_annotations_file,
-      FLAGS.test_image_dir,
-      testdev_output_path,
-      FLAGS.include_masks,
-      num_shards=100)
+      num_shards=50)
+  # _create_tf_record_from_coco_annotations(
+  #     FLAGS.testdev_annotations_file,
+  #     FLAGS.test_image_dir,
+  #     testdev_output_path,
+  #     FLAGS.include_masks,
+  #     num_shards=100)
 
 
 if __name__ == '__main__':

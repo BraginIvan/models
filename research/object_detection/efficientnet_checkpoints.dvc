@@ -1,0 +1,7 @@
+md5: aa57777b01e3dff7bb7e6a314364324e
+outs:
+- md5: 27eab5e709b429f44d1d575bd867fbec.dir
+  path: efficientnet_checkpoints
+  cache: true
+  metric: false
+  persist: false

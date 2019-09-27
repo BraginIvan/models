@@ -1,4 +1,4 @@
 ['remote "s3"']
-url = ../dvc-object-detection-experiments
+url = s3://dvc-object-detection-experiments
 [core]
 remote = s3
